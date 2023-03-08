@@ -1,0 +1,70 @@
+import numpy as np
+import random
+
+N = int #input number of customer
+eld = [array 3xN] #input time constrain array
+d = [array N+1 x N+1] #input travel time array
+
+#time constrain checker
+def time_check(route, currenttime):
+    for i in range 0 to N:
+        if currenttime - eld[i][2] < eld[i][0] and i in route: #deliver too early
+            return True
+        if currenttime -eld[i][2] > eld[i][1] and i not in route: #deliver too late
+            return True
+    return False
+
+#calculate path time
+def path_time(route):
+    int time = 0
+    violate = False
+    for i in range(len(route)):
+        time += d[route[i+1]][route[i]]
+        violation = time_check(route, time)
+        if violation:
+            violate = True
+    return time, violate
+
+def neighbour(route): # create neighbour route by swapping two random customer
+    n = len(route)
+    result = np.copy(route)
+    i = random.randint(1,N); j = random.randint(1,N)
+    tmp = result[i]
+    result[i] = result[j]; result[j] = tmp
+    return result
+
+def solve(N, max_iter, starting_temperature, min_temperature, alpha):
+# make initial route, temperature, ...
+    violate = True
+    while violate:                         # make initial route by shuffling customer (while startpoint is fixed), but if its
+        best_route = np.arange(N)          # violated we make a new one
+        rest = to_be_shuffled[1:]   
+        random.shuffle(rest)
+        shuffled_arr = [to_be_shuffled[0]] + rest
+        energy, violate = path_time(best_route)
+        no_violate_best_route = best_route
+    current_temperature = starting_temperature
+    iter = 0
+    
+
+    while iter < max_iter:
+        neighbour_route = neighbour(route) # generate neighbour route
+        neighbour_energy, violate2 = path_time(neighbour_route)
+
+        if neighbour_energy < energy:                                              # if neighbour route is better,
+            best_route = neighbour_route, energy = neighbour_energy                # we take it
+            if not violate2:                                                       # also update if not violated
+                no_violate_best_route = best_route
+        else:                                                                      # if not we check probability
+            accept_p = e**((energy - neighbour_energy) / current_temperature)       
+            p = random.random()
+            if accept_p >= p:                                                      # if the probability is high enough   
+                best_route = neighbour_route, energy = neighbour_energy            # we still take it
+
+        if current_temperature < min_temperature:                                  # reset the temperature to min if its too low
+            current_temperature = min_temperature
+        else:
+            current_temperature *= alpha                                           # or else reduce it for better probability
+        
+        iter += 1
+    return no_violate_best_route
